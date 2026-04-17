@@ -11,16 +11,16 @@ const { env } = require('process');
 
 dotenv.config();
 
-
 ///HTTP logger
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
 
 app.use(express.urlencoded({
   extended:true
 }));
 
 app.use(cors({origin: "http://localhost:5173"}));
-
+app.use('/img', express.static(path.join(__dirname, '../public/img')));
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 
 //route init => khởi tạo đường tuyến
