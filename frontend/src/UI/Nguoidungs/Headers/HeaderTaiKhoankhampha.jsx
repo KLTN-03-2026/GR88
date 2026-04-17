@@ -3,15 +3,18 @@ import { useNavigate } from "react-router-dom";
 
 const HeaderTaikhoanKhamPha = ({ user }) => {
   const navigate = useNavigate();
-  const hoTen = user?.hoTen || "";
+  const hoTen = user?.hoTen || "Người dùng";
 
   const getAvatarText = (name) => {
     if (!name) return "ND";
     const words = name.trim().split(" ");
-    if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
-    return ((words[0][0] || "") + (words[words.length - 1][0] || "")).toUpperCase();
+    if (words.length === 1) {
+      return words[0].substring(0, 2).toUpperCase();
+    }
+    return (
+      (words[0][0] || "") + (words[words.length - 1][0] || "")
+    ).toUpperCase();
   };
-
   const getImageUrl = (image) => {
     if (!image) return "";
     if (image.startsWith("http")) return image;
@@ -23,23 +26,7 @@ const HeaderTaikhoanKhamPha = ({ user }) => {
   };
 
   const goTrangChuUser = () => {
-    if (!hoTen) return;
     navigate(`/${encodeURIComponent(hoTen)}`);
-  };
-
-  const goKhamPhaUser = () => {
-    if (!hoTen) return;
-    navigate(`/${encodeURIComponent(hoTen)}/khamphauser`);
-  };
-
-  const goHuongDanVienUser = () => {
-    if (!hoTen) return;
-    navigate(`/${encodeURIComponent(hoTen)}/huongdanvienuser`);
-  };
-
-  const goDangKyHuongDanVien = () => {
-    if (!hoTen) return;
-    navigate(`/${encodeURIComponent(hoTen)}/dangkihuongdanvien`);
   };
 
   return (
@@ -54,15 +41,25 @@ const HeaderTaikhoanKhamPha = ({ user }) => {
       </div>
 
       <div className="nav-taikhoan">
-        <span  onClick={goTrangChuUser} style={{ cursor: "pointer" }}>
+        <span
+          onClick={goTrangChuUser}
+          style={{ cursor: "pointer" }}
+        >
           Trang Chủ
         </span>
 
-        <span className="active-taikhoan"  onClick={goKhamPhaUser} style={{ cursor: "pointer" }}>
+        <span
+          className="active-taikhoan"
+          onClick={() => navigate(`/${encodeURIComponent(hoTen)}/khamphauser`)}
+          style={{ cursor: "pointer" }}
+        >
           Khám Phá
         </span>
 
-        <span  onClick={goHuongDanVienUser} style={{ cursor: "pointer" }}>
+        <span
+          onClick={() => navigate(`/${encodeURIComponent(hoTen)}/huongdanvienuser`)}
+          style={{ cursor: "pointer" }}
+        >
           Hướng Dẫn Viên
         </span>
       </div>
@@ -80,26 +77,16 @@ const HeaderTaikhoanKhamPha = ({ user }) => {
               <span>{getAvatarText(hoTen)}</span>
             )}
           </div>
-
-          <span>{hoTen || "Người dùng"}</span>
+          <span>{hoTen}</span>
           <span className="arrow-taikhoan"></span>
         </div>
 
         <div className="dropdown-taikhoan">
-          <div onClick={() => navigate(`/${encodeURIComponent(hoTen)}/dangkihuongdanvien`)}>Đăng ký làm đối tác</div>
-          <div onClick={() => navigate("/thongtintaikhoan")}>Quản lý tài khoản</div>
-          <div onClick={() => navigate("/baocao")}>Báo cáo</div>
-          <div onClick={() => navigate("/nhom")}>Group của tôi</div>
-          <div
-            onClick={() => {
-              localStorage.removeItem("user");
-              localStorage.removeItem("authUser");
-              localStorage.removeItem("currentUser");
-              navigate("/");
-            }}
-          >
-            Đăng Xuất
-          </div>
+          <div><a href="/dangkihuongdanvien">Đăng ký làm đối tác</a></div>
+          <div><a href="/thongtintaikhoan">Quản lý tài khoản</a></div>
+          <div><a href="/baocao">Báo cáo</a></div>
+          <div><a href="/nhom">Group của tôi</a></div>
+          <div><a href="/#">Đăng Xuất</a></div>
         </div>
       </div>
     </div>
@@ -107,4 +94,3 @@ const HeaderTaikhoanKhamPha = ({ user }) => {
 };
 
 export default HeaderTaikhoanKhamPha;
-
