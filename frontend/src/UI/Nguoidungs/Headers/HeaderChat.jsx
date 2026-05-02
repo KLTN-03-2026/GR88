@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const HeaderTaikhoan = ({ user }) => {
+const HeaderChat = ({ user }) => {
   const navigate = useNavigate();
   const hoTen = user?.hoTen || "";
 
@@ -54,7 +54,7 @@ const HeaderTaikhoan = ({ user }) => {
       </div>
 
       <div className="nav-taikhoan">
-        <span className="active-taikhoan" onClick={goTrangChuUser} style={{ cursor: "pointer" }}>
+        <span  onClick={goTrangChuUser} style={{ cursor: "pointer" }}>
           Trang Chủ
         </span>
 
@@ -88,7 +88,7 @@ const HeaderTaikhoan = ({ user }) => {
         <div className="dropdown-taikhoan">
           <div onClick={() => navigate(`/${encodeURIComponent(hoTen)}/dangkihuongdanvien`)}>Đăng ký làm đối tác</div>
           <div onClick={() => navigate("/thongtintaikhoan")}>Quản lý tài khoản</div>
-       <div onClick={() => navigate(`/${encodeURIComponent(hoTen)}/baocao`)}> Báo cáo</div>
+          <div onClick={() => navigate("/baocao")}>Báo cáo</div>
           <div onClick={() => navigate("/nhom")}>Group của tôi</div>
           <div
             onClick={() => {
@@ -106,5 +106,5 @@ const HeaderTaikhoan = ({ user }) => {
   );
 };
 
-export default HeaderTaikhoan;
+export default HeaderChat;
 

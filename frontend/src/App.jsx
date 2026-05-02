@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { Toaster, toast } from 'sonner';
 import "react-toastify/dist/ReactToastify.css";
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -26,7 +27,7 @@ import Chitietdiadiemuser from './Pages/Nguoidungs/Chitietdiadiemuser'
 import Chonloainhom from './Pages/Nguoidungs/Chonloainhom';
 import Chonnhom from './Pages/Nguoidungs/Chonnhom';
 import Thanhtoan from './Pages/Nguoidungs/Thanhtoan';
-import Danhgiavanglai from './Pages/Nguoidungs/Danhgiavanglai';
+import Danhgiavanglai from './Pages/Nguoidungs/Danhgiavanglai'; 
 
 
 import Nhomchat from './Pages/Nguoidungs/Nhomchat';
@@ -38,6 +39,7 @@ import QuanLyBaoCao from './Pages/Quantriviens/QuanLyBaoCao';
 import ThongBaoHeThong from './Pages/Quantriviens/ThongBaoHeThong';
 import QuanLyDiaDiem from './Pages/Quantriviens/QuanLyDiaDiem';
 import DonDangKy from './Pages/Quantriviens/DonDangKy';
+import CheckinAdmin from './Pages/Quantriviens/CheckinAdmin';
 
 
 import Bangdieukhien from './Pages/Doitacs/Bangdieukhien';
@@ -48,6 +50,16 @@ import Groupchat from './Pages/Doitacs/Groupchat';
 
 
 function App() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Lấy thông tin user từ localStorage khi trang web load
+    const savedUser = JSON.parse(localStorage.getItem("user")) ||
+      JSON.parse(localStorage.getItem("authUser"));
+    if (savedUser) {
+      setUser(savedUser);
+    }
+  }, []);
 
   return <>
     <ToastContainer position="top-right" autoClose={2000} />
@@ -95,22 +107,22 @@ function App() {
 
         <Route path='/hoadon' element={<Hoadon />} />
 
-        <Route path='/baocao' element={<Baocao />} />
+        <Route path='/:hoten/baocao' element={<Baocao />} />
 
         <Route path='/nhom' element={<Nhom />} />
 
         <Route path='/chitietdiadiem/:slug/danhgia' element={<Danhgiavanglai />} />
         <Route path='/:hoten/chitietdiadiemuser/:slug/danhgia' element={<Danhgia />} />
 
-        <Route path='/nhomchat' element={<Nhomchat />} />
+        <Route path='/nhomchat/:groupId' element={<Nhomchat user={user} />} />
+ 
 
 
 
-        <Route path='/chitietdiadiem/:slug' element={<Chitietdiadiem />} />
+        <Route path='/chitietdiadiem/:slug' element={<Chitietdiadiem user={user} />} />
         <Route path='/:hoten/chitietdiadiemuser/:slug' element={<Chitietdiadiemuser />} />
 
 
-        
 
 
 
@@ -129,7 +141,6 @@ function App() {
 
 
 
-      
 
 
 
@@ -155,18 +166,17 @@ function App() {
 
 
 
-      
-             {/* Đối tác */}
 
-             <Route path='/bangdieukhien' element={<Bangdieukhien />} />
 
-             <Route path='/hoso' element={<Hoso />} />
 
-             <Route path='/themdiadiem' element={<Themdiadiem />} />
+        {/* Đối tác */}
 
-             <Route path='/loimoinhom' element={<Loimoinhom />} />
+        <Route path='/doitac/:slug' element={<Bangdieukhien />} />
+        <Route path='/doitac/:slug/hoso' element={<Hoso />} />
+        <Route path='/doitac/:slug/themdiadiem' element={<Themdiadiem />} />
+        <Route path='/doitac/:slug/loimoinhom' element={<Loimoinhom />} />
+        <Route path='/doitac/:slug/groupchat' element={<Groupchat />} />
 
-             <Route path='/groupchat' element={<Groupchat />} /> 
 
 
 
@@ -225,22 +235,16 @@ function App() {
 
 
 
+        {/* Quản trị viên */}
 
-             {/* Quản trị viên */}
-
-        <Route path='/thongke' element={<ThongKe/>} />
-
-        <Route path='/thongkenguoidung' element={<ThongKeNguoiDung/>} />
-
-        <Route path='/duyetdiadiem' element={<DuyetDiaDiem/>} />
-
-        <Route path='/quanlybaocao' element={<QuanLyBaoCao/>} />
-
-        <Route path='/quanlydiadiem' element={<QuanLyDiaDiem/>} />
-
-        <Route path='/thongbaohethong' element={<ThongBaoHeThong/>} />
-
-        <Route path='/dondangky' element={<DonDangKy/>} />
+        <Route path='/admin/:slug' element={<ThongKe />} />
+        <Route path='/admin/:slug/thongkenguoidung' element={<ThongKeNguoiDung />} />
+        <Route path='/admin/:slug/duyetdiadiem' element={<DuyetDiaDiem />} />
+        <Route path='/admin/:slug/quanlybaocao' element={<QuanLyBaoCao />} />
+        <Route path='/admin/:slug/quanlydiadiem' element={<QuanLyDiaDiem />} />
+        <Route path='/admin/:slug/thongbaohethong' element={<ThongBaoHeThong />} />
+        <Route path='/admin/:slug/dondangky' element={<DonDangKy />} />
+        <Route path='/admin/:slug/checkin' element={<CheckinAdmin />} />
 
       </Routes>
 
