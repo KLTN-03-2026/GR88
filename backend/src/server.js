@@ -12,6 +12,8 @@ const route = require('./routes');
 
 // Import Model Chat
 const Chat = require('./models/Chat');
+const { kiemDuyetNoiDung } = require("./services/aiKiemDuyetService");
+const NguoiDung = require("./models/NguoiDung");
 
 dotenv.config();
 
@@ -27,8 +29,10 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 //truy cập trực tiếp qua /img/... như trong database
 app.use('/img', express.static(path.join(__dirname, '../public/img')));
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 // --- KHỞI TẠO ROUTES ---
 route(app);
 
@@ -40,6 +44,8 @@ const io = new Server(server, {
     methods: ["GET", "POST"]
   }
 });
+
+app.set("io", io);
 
 // --- LOGIC SOCKET.IO ---
 io.on("connection", (socket) => {
@@ -55,22 +61,44 @@ io.on("connection", (socket) => {
     );
   });
 
-  socket.on("send_message", async (data) => {
-    try {
-      const newChat = await Chat.create({
-        nhomId: data.groupId,
-        senderId: data.senderId,
-        hoTen: data.senderName,
-        noiDung: data.message,
-        senderRole: data.vaiTro === "doiTac" ? "huongDanVien" : "user",
-        thoiGian: new Date()
-      });
-      io.to(data.groupId).emit("receive_message", newChat);
-    } catch (err) {
-      console.error("Lỗi lưu tin nhắn:", err);
-    }
-  });
+ socket.on("send_message", async (data) => {
+  try {
+    const {
+      groupId,
+      senderId,
+      senderName,
+      message,
+      vaiTro,
+      hinhAnh = []
+    } = data;
 
+    // ===== KIỂM DUYỆT AI =====
+    const ketQua = await kiemDuyetNoiDung(message, hinhAnh);
+
+    if (!ketQua.hopLe) {
+      socket.emit("message_blocked", {
+        message: ketQua.lyDo
+      });
+ 
+      return;
+    }
+
+    // ===== LƯU DB =====
+    const newMessage = await Chat.create({
+      nhomId: groupId,
+      senderId,
+      hoTen: senderName,
+      noiDung: message,
+      hinhAnh
+    });
+
+    // ===== GỬI CHO NHÓM =====
+    io.to(groupId).emit("receive_message", newMessage);
+
+  } catch (err) {
+    console.log(err);
+  }
+});
   socket.on("new_member_joined", (data) => {
     io.to(data.groupId).emit("update_member_list");
   });
