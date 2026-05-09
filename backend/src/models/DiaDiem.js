@@ -12,12 +12,17 @@ const DiaDiem = new Schema({
   veVao: { type: String },
   quangduong: { type: String },
   khuVuc: { type: String },
-  hot:{ type: Boolean, default: false },
-  tinh:{type:String},
+  hot: { type: Boolean, default: false },
+  tinh: { type: String },
   image: { type: String },
-  images:  [{ type: String }],
+  images: [{ type: String }],
   dacDiemDiaDanh: [{ type: String }],
   slug: { type: String, unique: true },
+  trangThai: {
+    type: String,
+    enum: ['cho_duyet', 'da_duyet', 'tu_choi'],
+    default: 'cho_duyet'
+  },
 }, {
   timestamps: true,
 });
@@ -28,5 +33,6 @@ DiaDiem.pre('save', function () {
     this.slug = this._id.toString();
   }
 });
+
 
 module.exports = mongoose.model('DiaDiem', DiaDiem);
