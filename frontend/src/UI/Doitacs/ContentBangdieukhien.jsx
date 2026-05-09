@@ -1,9 +1,36 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import ContentChitietyeucau from "./ContentChitietyeucau";
 
 const formatMoney = (n = 0) => Number(n || 0).toLocaleString("vi-VN");
 
 const ContentBangdieukhien = () => {
+
+  const [loiMoi, setLoiMoi] = useState([]);
+  useEffect(() => {
+    const fetchLoiMoi = async () => {
+      try {
+        const user = getUser();
+        const doiTacId = user?.doiTacId;
+
+        if (!doiTacId) return;
+
+        const res = await fetch(
+          `http://localhost:5000/loimoi?doiTacId=${doiTacId}`
+        );
+
+        const data = await res.json();
+
+        setLoiMoi(data.loiMois || []);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchLoiMoi();
+  }, []);
+
+  const [selectedRequest, setSelectedRequest] = useState(null);
   // const { slug } = useParams();
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -117,7 +144,9 @@ const ContentBangdieukhien = () => {
       <div className="doitac-table-container">
         <div className="doitac-table-header">
           <h3>Yêu cầu thuê gần đây</h3>
+          {/*
           <button className="btn-more">...</button>
+          */}
         </div>
 
         <div className="doitac-table-yeucau">
@@ -129,24 +158,51 @@ const ContentBangdieukhien = () => {
             <div>Hành động</div>
           </div>
 
-          {(data.yeuCauGanDay || []).map((item) => (
-            <div className="doitac-row-yeucau" key={item.id}>
-              <div className="user-info">
-                <div className="user-avatar-small">#{String(item.khachHang).slice(-2)}</div>
-                <span>{item.khachHang}</span>
-              </div>
-              <div>{item.viTri}</div>
-              <div>{item.ngayDat}</div>
-              <div>
-                <span className={item.trangThai === "Đang chờ" ? "status-yeucau-pending" : "status-yeucau-done"}>
-                  {item.trangThai}
-                </span>
-              </div>
-              <div><button className="btn-chitiet-yeucau">Chi tiết</button></div>
+          {(loiMoi || []).length === 0 ? (
+            <div className="empty-state">
+              📭 Không có yêu cầu thuê gần đây
             </div>
-          ))}
+          ) : (
+            [...loiMoi]
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+              .map((item) => {
+                const khachHang = item.nhomId?.nguoiTao?.hoTen || "Không rõ";
+                const viTri = item.nhomId?.diaDiem?.tenDiaDiem || "Không rõ";
+                const ngayDat = item.createdAt
+                  ? new Date(item.createdAt).toLocaleDateString("vi-VN")
+                  : "Không rõ";
+
+                return (
+                  <div className="doitac-row-yeucau" key={item._id}>
+                    <div>{khachHang}</div>
+                    <div>{viTri}</div>
+                    <div>{ngayDat}</div>
+                    <div>
+                      <span className="status-yeucau-pending">
+                        Lời mời
+                      </span>
+                    </div>
+                    <div>
+                      <button
+                        className="btn-chitiet-yeucau"
+                        onClick={() => setSelectedRequest(item)}
+                      >
+                        Chi tiết
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+          )}
         </div>
+        {selectedRequest && (
+          <ContentChitietyeucau
+            request={selectedRequest}
+            onClose={() => setSelectedRequest(null)}
+          />
+        )}
       </div>
+
     </div>
   );
 };

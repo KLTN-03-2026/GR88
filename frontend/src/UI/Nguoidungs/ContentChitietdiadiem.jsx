@@ -24,6 +24,19 @@ const ContentChitietdiadiem = ({ user = null }) => {
 
   const [openJoinModal, setOpenJoinModal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  useEffect(() => {
+
+    const shouldOpen = localStorage.getItem("autoOpenCreateGroup");
+
+    if (shouldOpen === "true") {
+
+      setOpenCreateGroup(true);
+
+      // xóa flag sau khi mở
+      localStorage.removeItem("autoOpenCreateGroup");
+    }
+
+  }, []);
 
   const [reviewData, setReviewData] = useState({
     thongKe: {
@@ -266,7 +279,7 @@ const ContentChitietdiadiem = ({ user = null }) => {
         _id: diaDiem?._id || "",
         tenDiaDiem: diaDiem?.tenDiaDiem || "",
         khuVuc: diaDiem?.khuVuc || "",
-        image: fullImage, 
+        image: fullImage,
         images: diaDiem?.images || [],
         slug: diaDiem?.slug || "",
       },
@@ -284,8 +297,12 @@ const ContentChitietdiadiem = ({ user = null }) => {
   const getImageUrl = (image) => {
     if (!image) return "/img/default-user.jpg";
     if (image.startsWith("http")) return image;
-    if (image.startsWith("/")) return image;
-    return `/${image}`;
+
+    if (image.startsWith("/uploads") || image.startsWith("/img")) {
+      return `http://localhost:5000${image}`;
+    }
+
+    return `http://localhost:5000/${image}`;
   };
 
   if (loading) {
@@ -401,7 +418,7 @@ const ContentChitietdiadiem = ({ user = null }) => {
                     <div className="review-card" key={item._id}>
                       <div className="review-header">
                         <img
-                          src={item.nguoiDung?.image || "/img/default-user.jpg"}
+                          src={getImageUrl(item.nguoiDung?.image)}
                           alt={item.nguoiDung?.hoTen || "avatar"}
                           className="review-avatar-img"
                         />
@@ -499,15 +516,7 @@ const ContentChitietdiadiem = ({ user = null }) => {
                             <p>👥 {selectedGroup.thanhVien?.length || 1} / {selectedGroup.soLuong || 10} người</p>
                           </div>
 
-                          <div className="join2-warning-box">
-                            <h4 style={{ color: '#d4a373', marginBottom: '8px' }}>⚠ Yêu cầu xác minh danh tính</h4>
-                            <p style={{ fontSize: '13px', color: '#ccc' }}>
-                              Để đảm bảo an toàn cho toàn bộ thành viên trong nhóm trekking khu vực rừng núi hiểm trở, bạn cần hoàn tất xác minh danh tính nâng cao.
-                            </p>
-                            <button className="join2-btn-verify">
-                              🔒 Xác minh danh tính nâng cao
-                            </button>
-                          </div>
+
 
                           <button className="join2-btn-join" onClick={handleJoinGroup} style={{ marginTop: '20px' }}>
                             👤 Xác nhận Tham gia
@@ -770,8 +779,35 @@ const ContentChitietdiadiem = ({ user = null }) => {
                 <div className="step3-title-step3">Thiết lập An toàn & Xác minh</div>
                 <div className="step3-commit-box-step3">
                   <div className="step3-commit-header-step3">🛡 Cam kết an toàn</div>
-                  <label className="step3-check-item-step3"><input type="checkbox" defaultChecked /> Tôi đồng ý tuân theo các giao thức an toàn...</label>
-                  <label className="step3-check-item-step3"><input type="checkbox" defaultChecked /> Tôi hiểu rõ các rủi ro...</label>
+                  <label className="step3-check-item-step3">
+                    <input type="checkbox" defaultChecked />
+                    Tôi hiểu rõ hoạt động trekking có thể gặp các rủi ro như:
+                    trượt ngã, lạc đường, thời tiết xấu, côn trùng hoặc chấn thương ngoài ý muốn.
+                  </label>
+
+                  <label className="step3-check-item-step3">
+                    <input type="checkbox" defaultChecked />
+                    Tôi cam kết luôn đi cùng đoàn, không tự ý tách nhóm hoặc thay đổi lộ trình
+                    nếu chưa thông báo với trưởng nhóm / hướng dẫn viên.
+                  </label>
+
+                  <label className="step3-check-item-step3">
+                    <input type="checkbox" defaultChecked />
+                    Tôi đã chuẩn bị đầy đủ vật dụng cần thiết:
+                    nước uống, giày trekking, áo mưa, pin dự phòng và thuốc cá nhân.
+                  </label>
+
+                  <label className="step3-check-item-step3">
+                    <input type="checkbox" defaultChecked />
+                    Tôi đồng ý tuân thủ hướng dẫn của trưởng nhóm / hướng dẫn viên
+                    trong suốt hành trình để đảm bảo an toàn chung.
+                  </label>
+
+                  <label className="step3-check-item-step3">
+                    <input type="checkbox" defaultChecked />
+                    Tôi xác nhận tình trạng sức khỏe phù hợp để tham gia trekking
+                    và tự chịu trách nhiệm với các vấn đề cá nhân phát sinh.
+                  </label>
                 </div>
 
                 <div className="step3-verify-step3">

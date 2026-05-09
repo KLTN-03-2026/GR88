@@ -6,6 +6,9 @@ import axios from "axios";
 const socket = io.connect("http://localhost:5000");
 
 const ContentNhomchat = ({ user }) => {
+
+
+
   const handleChangeCheckoutCode = (e, index) => {
     const value = e.target.value.replace(/[^0-9]/g, "");
 
@@ -50,6 +53,8 @@ const ContentNhomchat = ({ user }) => {
   const [groupData, setGroupData] = useState(null);
   const [messages, setMessages] = useState([]);
   const [currentInput, setCurrentInput] = useState("");
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [previewImages, setPreviewImages] = useState([]);
   const chatEndRef = useRef(null);
 
   //checkin-checkout time
@@ -102,7 +107,10 @@ const ContentNhomchat = ({ user }) => {
         setShowCheckinModal(false);
       } catch (err) {
         console.log(err);
-        alert("Checkin lỗi");
+
+        alert(
+          err.response?.data?.message || "Checkin lỗi"
+        );
       }
     });
   };
@@ -129,9 +137,18 @@ const ContentNhomchat = ({ user }) => {
 
         alert("Checkout thành công");
         setShowCheckoutModal(false);
+
+        if (user.vaiTro === "doiTac") {
+          window.location.href = "/doitac/:id/loimoinhom";
+        } else {
+          window.location.href = "/lichsuchuyendi";
+        }
       } catch (err) {
         console.log(err);
-        alert("Checkout lỗi");
+
+        alert(
+          err.response?.data?.message || "Checkout lỗi"
+        );
       }
     });
   };
@@ -144,11 +161,11 @@ const ContentNhomchat = ({ user }) => {
       const start = new Date(groupData.startTime);
       const end = new Date(groupData.endTime);
 
-      // ✅ Điều kiện mở nút Check-in: Khi đã đến hoặc sau giờ khởi hành
+      // Điều kiện mở nút Check-in: Khi đã đến hoặc sau giờ khởi hành
       // Bạn có thể chỉnh lại: now >= start
       setCanCheckIn(now >= start);
 
-      // ✅ Điều kiện mở nút Check-out: Khi đã đến hoặc sau giờ kết thúc
+      // Điều kiện mở nút Check-out: Khi đã đến hoặc sau giờ kết thúc
       setCanCheckOut(now >= end);
     };
 
@@ -215,23 +232,63 @@ const ContentNhomchat = ({ user }) => {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+  //xử lý ảnh
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleSelectImages = async (e) => {
+    const files = Array.from(e.target.files || []);
+
+    const validFiles = files
+      .filter((file) => file.type.startsWith("image/"))
+      .slice(0, 5);
+
+    const base64Images = await Promise.all(
+      validFiles.map((file) => fileToBase64(file))
+    );
+
+    setSelectedImages(base64Images);
+    setPreviewImages(base64Images);
+  };
 
   // 6. Hàm xử lý gửi tin nhắn
   const handleSend = () => {
-    if (!currentInput.trim() || !user) return;
+    if ((!currentInput.trim() && selectedImages.length === 0) || !user) return;
 
     const msgData = {
       groupId,
-      senderId: user.id || user._id, // Ưu tiên ID từ login
-      senderName: user.hoTen,        // Đảm bảo lấy đúng tên
-      message: currentInput,
+      senderId: user.id || user._id,
+      senderName: user.hoTen,
+      message: currentInput.trim(),
       vaiTro: user.vaiTro,
+      hinhAnh: selectedImages,
     };
 
-    socketRef.current.emit("send_message", msgData); //
-    setCurrentInput("");
-  };
+    socketRef.current.emit("send_message", msgData);
 
+    setCurrentInput("");
+    setSelectedImages([]);
+    setPreviewImages([]);
+  };
+  useEffect(() => {
+    const handleBlocked = (data) => {
+      alert(data.message || "Tin nhắn bị chặn vì vi phạm tiêu chuẩn cộng đồng.");
+    };
+
+    socketRef.current.on("message_blocked", handleBlocked);
+
+    return () => {
+      socketRef.current.off("message_blocked", handleBlocked);
+    };
+  }, []);
   if (!groupData) {
     return (
       <div className="loading-chat" style={{ color: 'white', textAlign: 'center', padding: '50px' }}>
@@ -343,7 +400,22 @@ const ContentNhomchat = ({ user }) => {
                     🌟 HDV
                   </span>
                 )}
-                <div className="bubble-nhomchat">{m.noiDung}</div>
+                <div className="bubble-nhomchat">
+                  {m.noiDung && <div>{m.noiDung}</div>}
+
+                  {Array.isArray(m.hinhAnh) && m.hinhAnh.length > 0 && (
+                    <div className="chat-image-list">
+                      {m.hinhAnh.map((img, index) => (
+                        <img
+                          key={index}
+                          src={img}
+                          alt="Ảnh chat"
+                          className="chat-image-item"
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <span className="msg-time">
                   {new Date(m.thoiGian).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
@@ -352,11 +424,38 @@ const ContentNhomchat = ({ user }) => {
           ))}
           <div ref={chatEndRef} />
         </div>
-
+        {previewImages.length > 0 && (
+          <div className="chat-preview-images">
+            {previewImages.map((img, index) => (
+              <div className="chat-preview-item" key={index}>
+                <img src={img} alt="preview" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newImages = previewImages.filter((_, i) => i !== index);
+                    setPreviewImages(newImages);
+                    setSelectedImages(newImages);
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         {/* INPUT CHAT */}
         <div className="input-wrapper-nhomchat">
           <div className="custom-input-group">
-            <button className="btn-add-file">+</button>
+            <label className="btn-add-file">
+              +
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                onChange={handleSelectImages}
+              />
+            </label>
             <input
               value={currentInput}
               onChange={(e) => setCurrentInput(e.target.value)}
@@ -427,19 +526,19 @@ const ContentNhomchat = ({ user }) => {
                 <div className="online-status"></div>
               </div>
               <div className="member-info">
-                <p>{groupData.nguoiTao?.hoTen}</p>
+                <p>{groupData.nguoiTao?.id?.hoTen}</p>
                 <span className="member-role">Trưởng nhóm (Lead)</span>
               </div>
             </div>
 
             {/* 2. Hiển thị các thành viên khác */}
             {groupData.thanhVien?.map((member, index) => {
-              // 🔥 Chuẩn hóa dữ liệu
+              // Chuẩn hóa dữ liệu
               const memberId = member.user?._id || member._id;
               const name = member.user?.hoTen || member.hoTen || "Ẩn danh";
               const image = member.user?.image || member.image;
 
-              // ❗ tránh trùng trưởng nhóm
+              // tránh trùng trưởng nhóm
               if (memberId === groupData.nguoiTao?.id?._id) return null;
 
               return (
