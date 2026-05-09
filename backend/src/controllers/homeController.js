@@ -25,14 +25,14 @@ class homeController{
         return res.status(200).json({ diaDiems });
 
     }
-    catch(err){
+    catch(error){
       console.error('homeController.chitietdiadiem error:', error);
       return res.status(500).json({ error: 'Internal server error' });  
   }
 }
 async khampha(req,res){
    try{
-    const diaDiems = await DiaDiem.find();
+    const diaDiems = await DiaDiem.find({trangThai:'da_duyet'})
     return res.status(200).json({
       diaDiems
     });

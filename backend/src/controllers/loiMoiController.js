@@ -23,15 +23,30 @@ exports.getLoiMoi = async (req, res) => {
     try {
         const { doiTacId } = req.query;
 
+        // const doiTac = await DoiTac.findOne({
+        //     nguoiDung: doiTacId
+        // });
+
+        // if (!doiTac) {
+        //     return res.json({ loiMois: [] });
+        // }
+
+        // dùng đúng ID
         let loiMois = await LoiMoi.find({
-            doiTacId,
+            doiTacId: doiTacId,
             trangThai: "cho_xac_nhan"
         })
             .populate({
                 path: "nhomId",
                 populate: [
-                    { path: "nguoiTao", select: "hoTen" },
-                    { path: "diaDiem", select: "tenDiaDiem" }
+                    {
+                        path: "thanhVien.user",
+                        select: "hoTen email image"
+                    },
+                    {
+                        path: "diaDiem",
+                        select: "tenDiaDiem diaChi image"
+                    }
                 ]
             })
             .populate("doiTacId", "hoTen image");
@@ -67,7 +82,7 @@ exports.acceptLoiMoi = async (req, res) => {
             return res.status(404).json({ message: "Không tìm thấy nhóm" });
         }
 
-        // ❗ tránh trùng thành viên
+        //  tránh trùng thành viên
         if (!nhom.thanhVien.includes(loiMoi.doiTacId)) {
             const doiTac = await DoiTac.findById(loiMoi.doiTacId);
 
@@ -86,7 +101,7 @@ exports.acceptLoiMoi = async (req, res) => {
                 if (!exists) {
                     nhom.thanhVien.push({
                         user: userId,
-                        role: "huong_dan_vien"  
+                        role: "huong_dan_vien"
                     });
 
                     await nhom.save();
@@ -112,15 +127,15 @@ exports.rejectLoiMoi = async (req, res) => {
     try {
         const { loiMoiId } = req.params;
 
-        // ✅ BƯỚC 1: tìm lời mời
+        // tìm lời mời
         const loiMoi = await LoiMoi.findById(loiMoiId);
 
-        // ✅ BƯỚC 2: check tồn tại
+        // check tồn tại
         if (!loiMoi) {
             return res.status(404).json({ message: "Không tìm thấy lời mời" });
         }
 
-        // ✅ BƯỚC 3: update trạng thái
+        // update trạng thái
         loiMoi.trangThai = "da_tu_choi";
         await loiMoi.save();
 
@@ -138,12 +153,12 @@ exports.getThongKe = async (req, res) => {
         const { doiTacId } = req.query;
 
         const moi = await LoiMoi.countDocuments({
-            doiTacId,
+            doiTacId: doiTacId,
             trangThai: "cho_xac_nhan"
         });
 
         const daChapNhan = await LoiMoi.countDocuments({
-            doiTacId,
+            doiTacId: doiTacId,
             trangThai: "da_chap_nhan"
         });
 

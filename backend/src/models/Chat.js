@@ -9,8 +9,11 @@ const ChatSchema = new mongoose.Schema({
     },
     hoTen: String,
     noiDung: String,
+    hinhAnh: {
+        type: [String],
+        default: [],
+    },
     thoiGian: { type: Date, default: Date.now }
 });
-
-// Sửa lại dòng này (Xóa chữ .now)
+ 
 module.exports = mongoose.model("Chat", ChatSchema);
